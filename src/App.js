@@ -1,16 +1,17 @@
-import React, { useState, useEffect } from "react";
-
+import React, { useState, useEffect, useCallback } from "react";
 import MoviesList from "./components/MoviesList";
 import "./App.css";
 import Loader from "./components/Loader";
 
 function App() {
   const [movies, setMovies] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [retryInterval, setRetryInterval] = useState(null);
 
-  const fetchMovieHandler = async () => {
+  
+
+  const fetchMovies = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -28,41 +29,45 @@ function App() {
         openingText: movieData.opening_crawl,
         releaseDate: movieData.release_date,
       }));
+
       setMovies(transformedMovies);
       setIsLoading(false);
     } catch (error) {
       setError(error.message);
       retryFetching();
     }
-  };
+  }, []);
 
-  const retryFetching = () => {
-    const intervalId = setInterval(() => {
-      fetchMovieHandler();
-    }, 5000);
+  useEffect(() => {
+    fetchMovies();
+  }, [fetchMovies]);
+
+  const retryFetching = useCallback(() => {
+    const intervalId = setInterval(fetchMovies, 5000);
     setRetryInterval(intervalId);
-  };
+  }, [fetchMovies]);
 
-  const cancelRetryHandler = () => {
+  const cancelRetryHandler = useCallback(() => {
     setIsLoading(false);
-    setError("Fetching movies canceled by user.");
+    setError("Fetching movies canceled by the user.");
     if (retryInterval) {
       clearInterval(retryInterval);
       setRetryInterval(null);
     }
-  };
+  }, [retryInterval]);
+
+  
 
   useEffect(() => {
     if (!isLoading && error && !retryInterval) {
-      // Retry only when not already loading and there's an error
       retryFetching();
     }
-  }, [isLoading, error, retryInterval, retryFetching]);
+  }, [isLoading, error, retryInterval]);
 
   return (
     <React.Fragment>
       <section>
-        <button onClick={fetchMovieHandler}>Fetch Movies</button>
+        <button onClick={fetchMovies}>Fetch Movies</button>
         <button onClick={cancelRetryHandler} disabled={!retryInterval}>
           Cancel Retry
         </button>
