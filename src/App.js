@@ -10,13 +10,11 @@ function App() {
   const [error, setError] = useState(null);
   const [retryInterval, setRetryInterval] = useState(null);
 
-  
-
   const fetchMovies = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch("https://swapi.dev/api/films");
+      const response = await fetch("https://react-http-37f2f-default-rtdb.firebaseio.com/movies.json");
 
       if (!response.ok) {
         throw new Error("Something went wrong ...Retrying!");
@@ -24,14 +22,18 @@ function App() {
 
       const data = await response.json();
 
-      const transformedMovies = data.results.map((movieData) => ({
-        id: movieData.episode_id,
-        title: movieData.title,
-        openingText: movieData.opening_crawl,
-        releaseDate: movieData.release_date,
-      }));
+      const loadedMovies = [];
 
-      setMovies(transformedMovies);
+      for(const key in data){
+        loadedMovies.push({
+          id: key,
+          title: data[key].title,
+          openingText: data[key].openingText,
+          releaseDate: data[key].releaseDate,
+        });
+      }
+
+      setMovies(loadedMovies);
       setIsLoading(false);
     } catch (error) {
       setError(error.message);
@@ -42,6 +44,18 @@ function App() {
   useEffect(() => {
     fetchMovies();
   }, [fetchMovies]);
+
+  async function addMovieHandler(movie){
+    const response = await fetch('https://react-http-37f2f-default-rtdb.firebaseio.com/movies.json', {
+      method: 'POST',
+      body: JSON.stringify(movie),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = await response.json();
+    console.log(data);
+  }
 
   const retryFetching = useCallback(() => {
     const intervalId = setInterval(fetchMovies, 5000);
@@ -57,8 +71,6 @@ function App() {
     }
   }, [retryInterval]);
 
-  
-
   useEffect(() => {
     if (!isLoading && error && !retryInterval) {
       retryFetching();
@@ -68,7 +80,7 @@ function App() {
   return (
     <React.Fragment>
       <section>
-      <MovieForm/>
+        <MovieForm onAddMovie={addMovieHandler}/>
       </section>
       <section>
         <button onClick={fetchMovies}>Fetch Movies</button>
