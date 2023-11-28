@@ -1,0 +1,19 @@
+.movieForm-main{
+    display: flex;
+    flex-direction:column;
+}
+
+.movieForm-main > label{
+    font-weight: 600;
+    text-align: left;
+    padding: 5px 0px;
+}
+
+.movieForm-main > input ,
+.movieForm-main > textarea{
+    outline: none;
+    padding: 5px 5px;
+    border-radius: 15px;
+    margin: 5px 0px;
+    border: 1px solid black;
+}
